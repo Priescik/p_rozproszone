@@ -69,7 +69,7 @@ void sendPacket(packet_t* pkt, int destination, int tag);
 void sendPacketToAll(packet_t *pkt, int tag);
 void zmienStan(state_t);
 int zwiekszLamporta();
-void zmianaLamporta(int value);
+int zmianaLamporta(int value);
 
 
 // to ponizej jest juz zdefiniowane jako state_t

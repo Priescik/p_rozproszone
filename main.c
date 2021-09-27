@@ -15,6 +15,8 @@ int lamportValue;
 int pairId;
 char typWatku;
 state_t stan;
+int size, rank;
+MPI_Datatype MPI_PAKIET_T;
 
 
 void check_thread_support(int provided)
@@ -101,7 +103,7 @@ void naszInit(int* argc, char*** argv)
 
     if (rank < B) {
         typWatku = 'B';
-        stan = bCzeka;
+        stan = bOdpoczywa;
     }
     else {
         typWatku = 'C';
@@ -169,7 +171,7 @@ int zmianaLamporta(int value)
     return tmp;
 }
 
-void zmienStan(int newState)
+void zmienStan(state_t newState)
 {
     pthread_mutex_lock(&stateMut);
     stan = newState;

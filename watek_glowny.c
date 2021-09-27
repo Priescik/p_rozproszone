@@ -8,13 +8,13 @@ void bibliLoop() {
     packet_t *pkt = malloc(sizeof(packet_t));
 
     while (1) {
-        // sleep(SEC_IN_STATE); na razie bez czekania
+        sleep(SEC_IN_STATE);
         if (stan == bOdpoczywa) {
             // bibliotekarz odpoczywa, losowa szansa na przejscie do kolejnego stanu
             int perc = random() % 100;
             if (perc < 75) {
                 printf("Watek-[%c] id-[%d] - bede tworzyl zlecenie\n", typWatku, rank);
-                changeState(bTworzyZlecenie);
+                zmienStan(bTworzyZlecenie);
             }
             else {
                 printf("Watek-[%c] id-[%d] - pozostaje w stanie odpoczynku\n", typWatku, rank);
