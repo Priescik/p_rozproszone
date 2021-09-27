@@ -67,7 +67,7 @@ extern state_t stan;
 /* wysyłanie pakietu, skrót: wskaźnik do pakietu (0 oznacza stwórz pusty pakiet), do kogo, z jakim typem */
 void sendPacket(packet_t* pkt, int destination, int tag);
 void sendPacketToAll(packet_t *pkt, int tag);
-void changeState(state_t);
+void zmienStan(state_t);
 int zwiekszLamporta();
 void zmianaLamporta(int value);
 

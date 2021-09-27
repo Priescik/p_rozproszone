@@ -16,35 +16,35 @@
 // struct Queue* createQueue();
 // void enQueue(struct Queue* q, int k, int active, int ts);
 
-struct QNode* newNode(int k, int a, int ts)
-{
-    struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
-    temp->key = k;
-    temp->next = NULL;
-    temp->active = a;
-    temp->ts = ts;
-    return temp;
-}
-vector<QNode> sQueue;
+// struct QNode* newNode(int k, int a, int ts)
+// {
+//     struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
+//     temp->key = k;
+//     temp->next = NULL;
+//     temp->active = a;
+//     temp->ts = ts;
+//     return temp;
+// }
+// vector<QNode> sQueue;
 
 
-void deQueue(struct Queue* q)
-{
-    // If queue is empty, return NULL.
-    if (q->front == NULL)
-        return;
+// void deQueue(struct Queue* q)
+// {
+//     // If queue is empty, return NULL.
+//     if (q->front == NULL)
+//         return;
 
-    // Store previous front and move front one node ahead
-    struct QNode* temp = q->front;
+//     // Store previous front and move front one node ahead
+//     struct QNode* temp = q->front;
 
-    q->front = q->front->next;
+//     q->front = q->front->next;
 
-    // If front becomes NULL, then change rear also as NULL
-    if (q->front == NULL)
-        q->rear = NULL;
+//     // If front becomes NULL, then change rear also as NULL
+//     if (q->front == NULL)
+//         q->rear = NULL;
 
-    free(temp);
-}
+//     free(temp);
+// }
 
 // to juz jest w pliku main
 // void zmianaLamporta(int value)
@@ -78,7 +78,7 @@ void *startKomWatek(void *ptr)
                         ans->typ = ZADANIE_PRZYJETE;
                         pairId = pakiet.src;
                         sendPacket(ans, pakiet.src, MSG_TAG);
-                        changeState(cWaitStroj);
+                        zmienStan(cWaitStroj);
                     }
                     else {
                         // jestem zajety czyms innym                    
@@ -135,43 +135,43 @@ void *startKomWatek(void *ptr)
                     break;
             }
         }
-    } else if (typWatku == 'B') {
-            while(1) {
-                MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
+    }
+    else if (typWatku == 'B')
+    {
+        while(1) {
+            MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
 
-                switch (pakiet.typ) {
-                    case ZADANIE_PRZYJETE:
-                        if (stan == bTworzyZlecenie) {
-                            pairId = pakiet.src;
-                            changeState(bCzeka);
-                        } else {
-                            // ignoruje
-                        }
-                        break;
-
-                    case ZADANIE_ODRZUCONE:
-                        if (stan == bTworzyZlecenie) {
-                            // odrzuconeNum++
-                            // jesli odrzuconeNum == ilosc odbiorcow, to powroc do odpoczywania
-                            changeState(bOdpoczywa);
-                        } else {
-                            // ignoruje
-                        }
-                        break;
-
-                    case ZADANIE_ZAKONCZONE:
-                        if (stan == bCzeka) {
-                            if (pakiet.src == pairId) {
-                                pairId = -1;
-                                changeState(bOdpoczywa;)
-                            }
-                        } else {
-                            // ignoruje
-                        }
-                        break;
+            switch (pakiet.typ) {
+            case ZADANIE_PRZYJETE:
+                if (stan == bTworzyZlecenie) {
+                    pairId = pakiet.src;
+                    zmienStan(bCzeka);
+                } else {
+                    // ignoruje
                 }
-            }
-        }      
-}
+                break;
 
-void 
+            case ZADANIE_ODRZUCONE:
+                if (stan == bTworzyZlecenie) {
+                    // odrzuconeNum++
+                    // jesli odrzuconeNum == ilosc odbiorcow, to powroc do odpoczywania
+                    zmienStan(bOdpoczywa);
+                } else {
+                    // ignoruje
+                }
+                break;
+
+            case ZADANIE_ZAKONCZONE:
+                if (stan == bCzeka) {
+                    if (pakiet.src == pairId) {
+                        pairId = -1;
+                        zmienStan(bOdpoczywa);
+                    }
+                } else {
+                    // ignoruje
+                }
+                break;
+            }
+        }
+    }      
+}

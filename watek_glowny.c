@@ -14,7 +14,7 @@ void bibliLoop() {
             int perc = random() % 100;
             if (perc < 75) {
                 printf("Watek-[%c] id-[%d] - bede tworzyl zlecenie\n", typWatku, rank);
-                zmienStan(bTworzyZlecenie);
+                changeState(bTworzyZlecenie);
             }
             else {
                 printf("Watek-[%c] id-[%d] - pozostaje w stanie odpoczynku\n", typWatku, rank);
@@ -107,8 +107,7 @@ void conanLoop()
             // wyslij REQpranie do wszystkich conanow
             // kazda przychodzaca wiadomosc REQpranie zapisywana jest w lokalnej tablicy/kolejce pQueue
             // wejscie do nastepnego stanu jesli liczba obcych REQpranie nie przekracza liczby strojow Pnum
-            zmienStan(cInSecPranie)
-
+            zmienStan(cInSecPranie);
         }
         else if (stan == cInSecPranie) {
             printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie\n", typWatku, rank, lamportValue);
