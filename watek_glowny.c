@@ -2,97 +2,120 @@
 #include "watek_glowny.h"
 
 void bibliLoop() {
-    MPI_Status status;
-    packet_t rec;
+    // MPI_Status status;
+    // packet_t rec;
+    srand(rank);
+    packet_t *pkt = malloc(sizeof(packet_t));
 
-    while (stan != InFinish) {
-        sleep(SEC_IN_STATE);
-        if (stan == KATALOGOWANIE) {
+    while (1) {
+        // sleep(SEC_IN_STATE); na razie bez czekania
+        if (stan == bOdpoczywa) {
+            // bibliotekarz odpoczywa, losowa szansa na przejscie do kolejnego stanu
             int perc = random() % 100;
-            if (perc < 80)
-                zmienStan(CHCE_ZLECENIE);
-
+            if (perc < 75) {
+                printf("Watek-[%c] id-[%d] - bede tworzyl zlecenie\n", typWatku, rank);
+                zmienStan(bTworzyZlecenie);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] - pozostaje w stanie odpoczynku\n", typWatku, rank);
+            }
         }
-        if (stan == TWORZENIE_ZLECENIA) {
-            // losowe wybranie konana
-            packet_t *pkt = malloc(sizeof(packet_t));
+        else if (stan == bTworzyZlecenie) {
+            // bibliotekarz tworzy zlecenie, losujac conana
+            // w zależności od otrzymanych odpowiedzi albo wraca do poprzedniego stanu, albo przechodzi do nastepnego
+            int con = random() % C + B;
             pkt->src = rank;
             pkt->typ = ZLECENIE;
-            int con = random() % C + B;
-            printf("[%c] id-[%d] - Wysyłam zlecenie do Conana[%d]\n", watek_type, rank, con);
-            sendPacket(pkt, con, MPI_MSG);
-            printf("[%c] id-[%d] - Czekam na przyjęcie\n", watek_type, rank, con);
-            MPI_Recv(rec, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
-            if (rec.data == 1)
-                zmienStan(OCZEKIWANIE_NA_WYKONANIE)
+            pkt->data = con;
+            printf("Watek-[%c] id-[%d] - wysylam zlecenie do Conana[%d]\n", typWatku, rank, con);
+            sendPacket(pkt, con, MSG_TAG);
+            // printf("[%c] id-[%d] - Czekam na przyjęcie\n", watek_type, rank, con);
+            // MPI_Recv(rec, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
+            // if (rec.data == 1)
+            //     zmienStan(OCZEKIWANIE_NA_WYKONANIE)
         }
-        if (stan == OCZEKIWANIE_NA_WYKONANIE) {
-            printf("[%c] id-[%d] - Czekam na ukończenie zlecenia\n", watek_type, rank, con);
-            MPI_Recv(rec, 1, MPI_PACKET_T, rec.src, MSG_TAG, MPI_COMM_WORLD, &status);
+        else if (stan == bCzeka) {
+            // bibliotekarz czeka na zakonczenie zlecenia
+            // moze przejsc do stanu Odpoczywa gdy dostanie odpowiednia wiadomosc
+            printf("Watek-[%c] id-[%d] - czekam na ukonczenie zlecenia\n", typWatku, rank);
+            //MPI_Recv(rec, 1, MPI_PACKET_T, rec.src, MSG_TAG, MPI_COMM_WORLD, &status);
         }
     }
 }
 
 void conanLoop()
 {
-    srandom(rank);
-    while (stan != InFinish) {
-        if (stan == OCZEKUJE) {
+    srand(rank);
+    packet_t *pkt = malloc(sizeof(packet_t));
+
+    while (1) {
+        if (stan == cOdpoczywa) {
+            // conan odpoczywa po zrealizowanym zadaniu, losowa szansa na przejscie do nastepnego stanu
             int perc = random() % 100;
-            if (perc < 80)
-                zmienStan(CHCE_ZLECENIE);
+            if (perc < 75) {
+                zmienStan(cChceZlecenie);
+                printf("Watek-[%c] id-[%d] lamp-{%d} - bede ubiegal sie o zlecenie\n", typWatku, rank, lamportValue);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - pozostaje w stanie odpoczynku\n", typWatku, rank, lamportValue);
+            }
+        }
+        else if (stan == cChceZlecenie) {
+            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o zlecenie\n", typWatku, rank, lamportValue);
+			// wyslij do wszystkich conanow prosbe o dodanie do kolejki zlecen
+            // przejdz do nastepnego stanu jesli dostales ZLECENIE a twoj priorytet jest najwiekszy sposrod adresatow
+        }
+        else if (stan == cWaitStroj) {
+            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Stroj\n", typWatku, rank, lamportValue);
+            // wyslij REQstroj do wszystkich conanow
+            // kazda przychodzaca wiadomosc REQstroj zapisywana jest w lokalnej tablicy/kolejce sQueue
+            // wejscie do nastepnego stanu jesli liczba obcych REQstroj nie przekracza liczby strojow Snum
+            zmienStan(cInSecStroj);
 
         }
-        if (stan == CHCE_ZLECENIE) {
-			//zmianaLamporta(-1);
-            printf("[%c] id-[%d] lamp-{%d} - Oczekuje na zlecenia\n", watek_type, rank, lamportValue);
-			//for (int i = 0; i < size; i++)
-			//	zAckTab[i] = 0;
-			////TODO: nie wysyłać reqZ jesli wyslalem ackz na to BIBid ?
-			//for (int i = B; i < size; i++) {
-			//	if (i != rank) {
-			//		MPI_Send(BIBid, 1, MPI_INT, i, REQzlecenie, MPI_COMM_WORLD);
-			//		sendPacket();
-			//	}
-			//}
-        }
-        if (stan == CHCE_STROJ) {
-
-            printf("[%c] id-[%d] lamp-{%d} - Oczekuje na strój\n", watek_type, rank, lamportValue);
-            zmienStan(BIERZE_STROJ);
-
-        }
-        if (stan == BIERZE_STROJ) {
-
-            printf("[%c] id-[%d] lamp-{%d} - bierze strój\n", watek_type, rank, lamportValue);
+        else if (stan == cInSecStroj) {
+            // conan ubiera sie, losowa szansa na przejscie do nastepnego stanu
             int perc = random() % 100;
-            if (perc < 80)
-                zmienStan(PRACA);
+            if (perc < 90) {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - ubralem sie, ide pracowac\n", typWatku, rank, lamportValue);
+                zmienStan(cPraca);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - w sekcji kryt., ubieram sie\n", typWatku, rank, lamportValue);
+            }
+        }
+        else if (stan == cPraca) {
+            // conan wykonuje zlecenie, losowa szansa na przejscie do nastepnego stanu
+            int perc = random() % 100;
+            if (perc < 75) {
+                // conan ukonczyl zadanie
+                // wyslij informacje o zakonczeniu do sparowanego bibliotekarza
+                pkt->src = rank;
+                pkt->typ = ZADANIE_ZAKONCZONE;
+                pkt->data = 1;
+
+                sendPacket(pkt, pairId, MSG_TAG);
+                printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie skonczone, ide do pralni\n", typWatku, rank, lamportValue);
+                zmienStan(cWaitPranie);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie w trakcie realizacji\n", typWatku, rank, lamportValue);
+            }
+        }
+        else if (stan == cWaitPranie) {
+            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Pralke\n", typWatku, rank, lamportValue);
+            // wyslij REQpranie do wszystkich conanow
+            // kazda przychodzaca wiadomosc REQpranie zapisywana jest w lokalnej tablicy/kolejce pQueue
+            // wejscie do nastepnego stanu jesli liczba obcych REQpranie nie przekracza liczby strojow Pnum
+            zmienStan(cInSecPranie)
 
         }
-        if (stan == PRACA) {
-
-            printf("[%c] id-[%d] lamp-{%d} - Wykonuję zlecenie\n", watek_type, rank, lamportValue);
-            int perc = random() % 100;
-            if (perc < 80) 
-                zmienStan(CHCE_PRANIE);
-            
-
-        }
-        if (stan == CHCE_PRANIE) {
-
-            printf("[%c] id-[%d] lamp-{%d} - oczekuje na pranie\n", watek_type, rank, lamportValue);
-            int perc = random() % 100;
-            if (perc < 80)
-                zmienStan(ROBI_PRANIE);
-
-        }
-        if (stan == ROBI_PRANIE) {
-
-            printf("[%c] id-[%d] lamp-{%d} - Robi pranie\n", watek_type, rank, lamportValue);
-            int perc = random() % 100;
-            if (perc < 80)
-                zmienStan(ODPOCZYNEK);
+        else if (stan == cInSecPranie) {
+            printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie\n", typWatku, rank, lamportValue);
+            // conan robi pranie
+            // tworzenie nowego watku, ktory odczeka sleep(x) czasu, a potem wysle do conana informacje o zakonczeniu prania
+            // po stworzeniu dodatkowego watku mozna przejsc do stanu odpoczynku
+            zmienStan(cOdpoczywa);
 
         }
         sleep(SEC_IN_STATE);
