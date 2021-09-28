@@ -38,7 +38,7 @@ void bibliLoop() {
         else if (stan == bCzeka) {
             // bibliotekarz czeka na zakonczenie zlecenia
             // moze przejsc do stanu Odpoczywa gdy dostanie odpowiednia wiadomosc
-            printf("Watek-[%c] id-[%d]          - czekam na ukonczenie zlecenia C[%d]\n", typWatku, rank, con);
+            printf("Watek-[%c] id-[%d]          - czekam na ukonczenie zlecenia\n", typWatku, rank);
             //MPI_Recv(rec, 1, MPI_PACKET_T, rec.src, MSG_TAG, MPI_COMM_WORLD, &status);
         }
     }
@@ -71,7 +71,7 @@ void conanLoop()
             // wyslij REQstroj do wszystkich conanow
             // kazda przychodzaca wiadomosc REQstroj zapisywana jest w lokalnej tablicy/kolejce sQueue
             // wejscie do nastepnego stanu jesli liczba obcych REQstroj nie przekracza liczby strojow Snum
-            if (getQueueLastOccuranceNum(WaitQueueS, rank) < Snum) {
+            if (getQueueLastOccuranceNum(WaitQueueS, rank) < Snum && answerCount == C && canGetToSlipkiSec()) {
                 zmienStan(cInSecStroj);
             }
         }
@@ -98,7 +98,8 @@ void conanLoop()
 
                 sendPacket(pkt, pairId, MSG_TAG);
                 printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie skonczone, ide do pralni\n", typWatku, rank, lamportValue);
-                zmienStan(cWaitPranie);
+                answerCount = 0;
+		zmienStan(cWaitPranie);
                 pkt->typ = REQpralnia;
                 sendPacketToAllConans(pkt, MSG_TAG);
 
@@ -112,7 +113,7 @@ void conanLoop()
             // wyslij REQpranie do wszystkich conanow
             // kazda przychodzaca wiadomosc REQpranie zapisywana jest w lokalnej tablicy/kolejce pQueue
             // wejscie do nastepnego stanu jesli liczba obcych REQpranie nie przekracza liczby strojow Pnum
-            if (getQueueLastOccuranceNum(WaitQueueP, rank) < Pnum) {
+            if (getQueueLastOccuranceNum(WaitQueueP, rank) < Pnum && answerCount == C && canGetToPralkiSec()) {
                 zmienStan(cInSecPranie);
             }
         }

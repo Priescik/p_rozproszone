@@ -139,3 +139,24 @@ void insertToQ(struct Queue* q, struct QNode* in) {
     in->next = NULL;
     return;
 }
+
+int canGetToSlipkiSec(){
+    for(int i = B; i < C+B; i++){
+        int active  = checkActive(WaitQueueS, i);
+        printf("rank- %d, i- %d, act- %d\n",rank, i, active);
+        if(i != rank && active == -1){
+            if((sTimes[i]< getQueueTs(WaitQueueS, rank)) || (sTimes[i]== getQueueTs(WaitQueueS, rank) && i< rank )) {return -1;}
+        }
+    }
+}
+
+int canGetToPralkiSec(){
+    for(int i = B; i < C+B; i++){
+        int active  = checkActive(WaitQueueP, i);
+        printf("rank- %d, i- %d, act- %d\n",rank, i, active);
+        if(i != rank && active == -1){
+            if((pTimes[i]< getQueueTs(WaitQueueP, rank)) || (pTimes[i]== getQueueTs(WaitQueueP, rank) && i< rank )) {return -1;}
+        }
+    }
+}
+

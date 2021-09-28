@@ -28,3 +28,6 @@ struct Queue* createQueue();
 
 void delFromQueue(struct Queue*, int);
 void insertToQ(struct Queue*, struct QNode*);
+
+int canGetToSlipkiSec();
+int canGetToPralkiSec();

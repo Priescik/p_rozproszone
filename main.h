@@ -52,8 +52,11 @@ extern state_t stan;
 extern struct Queue* WaitQueueZ; 
 extern struct Queue* WaitQueueS;
 extern struct Queue* WaitQueueP;
+extern int* sTimes;
+extern int* pTimes;
+extern int answerCount;
 
-/* Typy wiadomości */
+/*nTypy wiadomości */
 #define REQzlecenie 1
 #define ACKzlecenie 2
 #define REQslipki 3

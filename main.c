@@ -21,7 +21,9 @@ MPI_Datatype MPI_PAKIET_T;
 struct Queue* WaitQueueZ;
 struct Queue* WaitQueueS;
 struct Queue* WaitQueueP;
-
+int* sTimes;
+int* pTimes;
+int answerCount = 0;
 
 void check_thread_support(int provided)
 {
@@ -75,6 +77,8 @@ void naszInit(int* argc, char*** argv)
     WaitQueueZ = createQueue();
     WaitQueueS = createQueue();
     WaitQueueP = createQueue();
+    sTimes = malloc(sizeof(int) * C);
+    pTimes = malloc(sizeof(int) * C);
     printf("\033[0; %dm", 31 + rank);
 
     if (rank < B) {
@@ -112,6 +116,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
     pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
+    printf("Watek-[%c] id-[%d] lamp-{%d} - Lamp++, bo %d\n", typWatku, rank, lamportValue, pkt->typ);
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt) free(pkt);
 }

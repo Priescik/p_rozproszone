@@ -23,7 +23,8 @@ void *startKomWatek(void *ptr)
                         ans->typ = ZADANIE_PRZYJETE;
                         pairId = pakiet.src;
                         sendPacket(ans, pakiet.src, MSG_TAG);
-                        zmienStan(cWaitStroj);
+                        answerCount = 0;
+			zmienStan(cWaitStroj);
 
                         ans->typ = REQslipki;
                         sendPacketToAllConans(ans, MSG_TAG);
@@ -54,7 +55,9 @@ void *startKomWatek(void *ptr)
                 case ACKslipki:
                     if (stan == cWaitStroj)
                     {
-                        zwiekszLamporta();
+                        sTimes[pakiet.src - B] = pakiet.ts;
+			answerCount++;
+			    //zwiekszLamporta();
                         //TODO: aktualizuje lamporta pod identyfikatorem nadawcy tej wiadomosci
                         //sTimes[pakiet.src] = pakiet.ts;
                     }
@@ -73,7 +76,9 @@ void *startKomWatek(void *ptr)
                 case ACKpralnia:
                     if (stan == cWaitPranie || stan == cInSecPranie)
                     {
-                        zwiekszLamporta();
+			pTimes[pakiet.src - B] = pakiet.ts;
+			answerCount++;
+                        //zwiekszLamporta();
                         //TODO: aktualizuje lamporta pod identyfikatorem nadawcy tej wiadomosci
                         //pTimes[pakiet.src] = pakiet.ts;
                     }
