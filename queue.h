@@ -1,4 +1,6 @@
-
+#include <stdio.h>
+#include <stdlib.h>
+#include "main.h"
 
 struct QNode {
     int Cid;
@@ -14,6 +16,7 @@ struct Queue {
 
 int getQueueTs(struct Queue*, int);
 int getQueueNum(struct Queue*, int);
+int getQueueLastOccuranceNum(struct Queue*, int);
 
 void deQueue(struct Queue*);
 

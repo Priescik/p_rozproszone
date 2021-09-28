@@ -4,7 +4,7 @@ int getQueueTs(struct Queue* q, int rank) {
 	int num = 0;
 	struct QNode* tmp = q->front;
 	while (tmp != NULL) {
-		if (tmp->key == rank && tmp->active == 1) { return tmp->ts; }
+		if (tmp->Cid == rank && tmp->active == 1) { return tmp->ts; }
 		tmp = tmp->next;
 		num += 1;
 	}
@@ -15,7 +15,7 @@ int getQueueNum(struct Queue* q, int rank) {
 	int num = 0;
 	struct QNode* tmp = q->front;
 	while (tmp != NULL) {
-		if (tmp->key == rank && tmp->active == 1) { return num; }
+		if (tmp->Cid == rank && tmp->active == 1) { return num; }
 		tmp = tmp->next;
 		num += 1;
 	}
@@ -26,7 +26,7 @@ int getQueueLastOccuranceNum(struct Queue* q, int rank) {
     int num = -1, i = 0;
     struct QNode* tmp = q->front;
     while (tmp != NULL) {
-        if (tmp->key == rank && tmp->active == 1) { num = i; }
+        if (tmp->Cid == rank && tmp->active == 1) { num = i; }
         tmp = tmp->next;
         i += 1;
     }

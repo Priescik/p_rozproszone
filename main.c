@@ -163,7 +163,7 @@ int main(int argc, char** argv)
     B = atoi( argv[1] );
     C = atoi( argv[2] );
     
-    Snum = 1000;  // definiowanie liczby strojow
+    Snum = 1;  // definiowanie liczby strojow
     Pnum = 1000;  // definiowanie liczby pralek
     lamportValue = 0;  // inicjacja zegaru Lamporta
 
