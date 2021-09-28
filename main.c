@@ -1,6 +1,7 @@
 #include "main.h"
 #include "watek_komunikacyjny.h"
 #include "watek_glowny.h"
+#include "queue.h"
 #include <pthread.h>
 
 
@@ -17,6 +18,9 @@ char typWatku;
 state_t stan;
 int size, rank;
 MPI_Datatype MPI_PAKIET_T;
+struct Queue* WaitQueueZ;
+struct Queue* WaitQueueS;
+struct Queue* WaitQueueP;
 
 
 void check_thread_support(int provided)
@@ -43,39 +47,6 @@ void check_thread_support(int provided)
     }
 }
 
-/* srprawdza, czy są wątki, tworzy typ MPI_PAKIET_T
-*/
-// void inicjuj(int *argc, char ***argv)
-// {
-//     int provided;
-//     MPI_Init_thread(argc, argv,MPI_THREAD_MULTIPLE, &provided);
-//     check_thread_support(provided);
-
-
-//     /* Stworzenie typu */
-//     /* Poniższe (aż do MPI_Type_commit) potrzebne tylko, jeżeli
-//        brzydzimy się czymś w rodzaju MPI_Send(&typ, sizeof(pakiet_t), MPI_BYTE....
-//     */
-//     /* sklejone z stackoverflow */
-//     const int nitems=3; /* bo packet_t ma trzy pola */
-//     int       blocklengths[3] = {1,1,1};
-//     MPI_Datatype typy[3] = {MPI_INT, MPI_INT, MPI_INT};
-
-//     MPI_Aint     offsets[3]; 
-//     offsets[0] = offsetof(packet_t, ts);
-//     offsets[1] = offsetof(packet_t, src);
-//     offsets[2] = offsetof(packet_t, data);
-
-//     MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PAKIET_T);
-//     MPI_Type_commit(&MPI_PAKIET_T);
-
-//     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//     MPI_Comm_size(MPI_COMM_WORLD, &size);
-//     srand(rank);
-
-//     pthread_create( &threadKom, NULL, startKomWatek , 0);
-// }
-
 // wariacja "inicjuj()" dla naszego problemu
 void naszInit(int* argc, char*** argv)
 {
@@ -100,6 +71,10 @@ void naszInit(int* argc, char*** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     srand(rank);
+
+    WaitQueueZ = createQueue();
+    WaitQueueS = createQueue();
+    WaitQueueP = createQueue();
 
     if (rank < B) {
         typWatku = 'B';
@@ -140,13 +115,13 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     if (freepkt) free(pkt);
 }
 
-void sendPacketToAll(packet_t *pkt, int tag)
+void sendPacketToAllConans(packet_t *pkt, int tag)
 {
     int freepkt=0;
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
     pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
-    for (int i=0; i<B+C; i++) {
+    for (int i=B; i<B+C; i++) {
         MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
     }
     if (freepkt) free(pkt);

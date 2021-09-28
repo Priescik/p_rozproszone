@@ -1,5 +1,6 @@
 #include "main.h"
 #include "watek_glowny.h"
+#include "queue.h"
 
 void bibliLoop() {
     // MPI_Status status;
@@ -70,8 +71,9 @@ void conanLoop()
             // wyslij REQstroj do wszystkich conanow
             // kazda przychodzaca wiadomosc REQstroj zapisywana jest w lokalnej tablicy/kolejce sQueue
             // wejscie do nastepnego stanu jesli liczba obcych REQstroj nie przekracza liczby strojow Snum
-            zmienStan(cInSecStroj);
-
+            if (getQueueLastOccuranceNum(WaitQueueS, rank) < Snum) {
+                zmienStan(cInSecStroj);
+            }
         }
         else if (stan == cInSecStroj) {
             // conan ubiera sie, losowa szansa na przejscie do nastepnego stanu

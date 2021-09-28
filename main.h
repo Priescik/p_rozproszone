@@ -49,6 +49,9 @@ extern int pairId;  // identyfikator drugiej strony zlecenia
 extern char typWatku;  // 'B' lub 'C'; określa czy wątek jest bibliotekarzem, czy Conanem
 extern state_t stan;
 
+extern struct Queue* WaitQueueZ; 
+extern struct Queue* WaitQueueS;
+extern struct Queue* WaitQueueP;
 
 /* Typy wiadomości */
 #define REQzlecenie 1

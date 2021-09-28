@@ -1,62 +1,7 @@
 #include "main.h"
 #include "watek_komunikacyjny.h"
+#include "queue.h"
 
-// queue.h nie jest używane
-// struct QNode {
-//     int key;
-//     int active;
-//     int ts;
-//     struct QNode* next;
-// };
-
-// struct Queue {
-//     struct QNode* front, * rear;
-// };
-// struct QNode* newNode(int k, int active, int ts);
-// struct Queue* createQueue();
-// void enQueue(struct Queue* q, int k, int active, int ts);
-
-// struct QNode* newNode(int k, int a, int ts)
-// {
-//     struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
-//     temp->key = k;
-//     temp->next = NULL;
-//     temp->active = a;
-//     temp->ts = ts;
-//     return temp;
-// }
-// vector<QNode> sQueue;
-
-
-// void deQueue(struct Queue* q)
-// {
-//     // If queue is empty, return NULL.
-//     if (q->front == NULL)
-//         return;
-
-//     // Store previous front and move front one node ahead
-//     struct QNode* temp = q->front;
-
-//     q->front = q->front->next;
-
-//     // If front becomes NULL, then change rear also as NULL
-//     if (q->front == NULL)
-//         q->rear = NULL;
-
-//     free(temp);
-// }
-
-// to juz jest w pliku main
-// void zmianaLamporta(int value)
-// {
-//     pthread_mutex_lock(&lamportMut);
-//     if (value == -1)
-//         lamportValue++;
-//     else
-//         lamportValue = value;
-//     pthread_mutex_unlock(&lamportMut);
-//     //nie do końca czaje po co ten mutex
-// }
 
 /* wątek komunikacyjny; zajmuje się odbiorem i reakcją na komunikaty */
 void *startKomWatek(void *ptr)
@@ -79,6 +24,9 @@ void *startKomWatek(void *ptr)
                         pairId = pakiet.src;
                         sendPacket(ans, pakiet.src, MSG_TAG);
                         zmienStan(cWaitStroj);
+
+                        ans->typ = REQslipki;
+                        sendPacketToAllConans(ans, MSG_TAG);
                     }
                     else {
                         // jestem zajety czyms innym                    
@@ -98,7 +46,7 @@ void *startKomWatek(void *ptr)
 
                 case REQslipki:
                     //dodaj do lokalnej kolejki sQueue // .push_back(status.MPI_SOURCE);
-                    //ans->ts = lamportValue; <- robione w funckji sendPacket
+                    insertToq(WaitQueueS, newNode(pakiet.src, 1, pakiet.ts));
                     ans->typ = ACKslipki;
                     sendPacket(ans, pakiet.src, MSG_TAG);
                     break;
@@ -116,6 +64,7 @@ void *startKomWatek(void *ptr)
                 case REQpralnia:
                     //dodaj do lokalnej kolejki pQueue // .push_back(status.MPI_SOURCE);
                     //ans->ts = lamportValue; <- robione w funckji sendPacket
+                    insertToq(WaitQueueP, newNode(pakiet.src, 1, pakiet.ts));
                     ans->typ = ACKpralnia;
                     sendPacket(ans, pakiet.src, MSG_TAG);
                     break;
@@ -131,7 +80,8 @@ void *startKomWatek(void *ptr)
                     break;
 
                 case RELEASE:
-
+                    delFromQueue(WaitQueueS, pakiet.src);
+                    //delFromQueue(WaitQueueP, pakiet.src);
                     break;
             }
         }
