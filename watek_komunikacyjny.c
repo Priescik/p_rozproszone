@@ -65,9 +65,8 @@ void *startKomWatek(void *ptr)
                     //dodaj do lokalnej kolejki pQueue // .push_back(status.MPI_SOURCE);
                     //ans->ts = lamportValue; <- robione w funckji sendPacket
                     
-		    //insertToQ(WaitQueueP, newNode(pakiet.src, 1, pakiet.ts));
-                    
-		    ans->typ = ACKpralnia;
+		            insertToQ(WaitQueueP, newNode(pakiet.src, 1, pakiet.ts));
+		            ans->typ = ACKpralnia;
                     sendPacket(ans, pakiet.src, MSG_TAG);
                     break;
 
@@ -83,7 +82,7 @@ void *startKomWatek(void *ptr)
 
                 case RELEASE:
                     delFromQueue(WaitQueueS, pakiet.src);
-                    //delFromQueue(WaitQueueP, pakiet.src);
+                    delFromQueue(WaitQueueP, pakiet.src);
                     break;
             }
         }

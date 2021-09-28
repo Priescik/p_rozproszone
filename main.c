@@ -75,6 +75,7 @@ void naszInit(int* argc, char*** argv)
     WaitQueueZ = createQueue();
     WaitQueueS = createQueue();
     WaitQueueP = createQueue();
+    printf("\033[0; %dm", 31 + rank);
 
     if (rank < B) {
         typWatku = 'B';
