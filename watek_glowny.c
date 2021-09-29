@@ -5,8 +5,8 @@
 
 void zajmijPralke() {
     for (int i=0; i<Pnum; i++) {
-        if (myPranie[i] == -1) { 
-            myPranie[i] = SEC_IN_PRALKA;
+        if (pralniaTimes[i] == -1) { 
+            pralniaTimes[i] = SEC_IN_PRALKA;
             return;
         }
     }
@@ -14,15 +14,15 @@ void zajmijPralke() {
 
 void aktualizujPralki() {
     for (int i=0; i<Pnum; i++) {
-        if (myPranie[i] > 0) { myPranie[i] -= 1; }
-        else if (myPranie[i] == 0) { 
+        if (pralniaTimes[i] > 0) { pralniaTimes[i] -= 1; }
+        else if (pralniaTimes[i] == 0) { 
             packet_t *pkt = malloc(sizeof(packet_t));
             pkt->src = rank;
             pkt->typ = RELEASE;
             pkt->ts = zwiekszLamporta();
             sendPacketToAllConans(pkt, MSG_TAG);
             free(pkt);
-            myPranie[i] = -1;
+            pralniaTimes[i] = -1;
         }
     }
 }

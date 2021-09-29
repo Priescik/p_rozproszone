@@ -53,8 +53,6 @@ extern state_t stan;
 extern struct Queue* WaitQueueZ; 
 extern struct Queue* WaitQueueS;
 extern struct Queue* WaitQueueP;
-//!extern int* sTimes;
-//!extern int* pTimes;
 extern int* otherTimes;  // tablica znanych wartości zegarów innych procesów
 extern int* pralniaTimes;  // tablica z czasami zakończenia prania strojów danego Conana
 //!extern int answerCount;  // ilość potwierdzeń uzyskanych od innych procesów w odpowiedzi na Req

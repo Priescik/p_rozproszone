@@ -28,7 +28,7 @@ void setInactive(struct Queue* q, int rank) {
     // udało mi się wejść do sekcji krytycznej, ale Req musi nadal pozostać w kolejce
 	struct QNode* tmp = q->front;
     while (tmp != NULL) {
-        if(tmp->key == rank && tmp->active == 1) {
+        if(tmp->Cid == rank && tmp->active == 1) {
             tmp->active = 0;
             return;
         }
