@@ -162,17 +162,17 @@ int canGetToSlipkiSec() {
     int unknown = 0;
     for (int i = B; i < C+B; i++) {
         int active  = checkActive(WaitQueueS, i);
-        printf("rank- %d, i- %d, act- %d\n",rank, i, active);
+        printf("\033[0;%dm rank- %d, i- %d, act- %d\n",rank,rank, i, active);
         if(i != rank && active == -1) {
             if((otherTimes[i]< getQueueTs(WaitQueueS, rank)) || (otherTimes[i]== getQueueTs(WaitQueueS, rank) && i < rank)) {
                 unknown++;
-		printf("C- %d, other[i]- %d, ts- %d\n",rank, otherTimes[i], getQueueTs(WaitQueueS, rank));
+		printf("\033[0;%dm C- %d, other[i]- %d, ts- %d\n",rank,rank, otherTimes[i], getQueueTs(WaitQueueS, rank));
 
             }
         }
     }
     int num = getQueueNum(WaitQueueS, rank);
-    printf("C- %d, num- %d, other- %d, ts- %d\n",rank, num, unknown, getQueueTs(WaitQueueS, rank));
+    printf("\033[0;%dm C- %d, num- %d, other- %d, ts- %d\n",rank,rank, num, unknown, getQueueTs(WaitQueueS, rank));
     num += unknown;
     return num;
 }
@@ -184,7 +184,7 @@ int canGetToPralkiSec() {
     int unknown = 0;
     for (int i = B; i < C+B; i++) {
         int active  = checkActive(WaitQueueP, i);
-        printf("rank- %d, i- %d, act- %d\n",rank, i, active);
+        printf("\033[0;%dm rank- %d, i- %d, act- %d\n",rank,rank, i, active);
         if(i != rank && active == -1) {
             if((otherTimes[i] < getQueueTs(WaitQueueP, rank)) || (otherTimes[i] == getQueueTs(WaitQueueP, rank) && i < rank)) {
                 unknown++;
