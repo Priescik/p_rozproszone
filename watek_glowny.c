@@ -20,6 +20,7 @@ void aktualizujPralki() {
             pkt->src = rank;
             pkt->typ = RELEASE;
             pkt->ts = zwiekszLamporta();
+	    printf("Watek-[%c] id-[%d] lamp-{%d} - Pranie skonczone\n", typWatku, rank, lamportValue);
             sendPacketToAllConans(pkt, MSG_TAG);
             free(pkt);
             pralniaTimes[i] = -1;

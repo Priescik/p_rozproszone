@@ -166,10 +166,13 @@ int canGetToSlipkiSec() {
         if(i != rank && active == -1) {
             if((otherTimes[i]< getQueueTs(WaitQueueS, rank)) || (otherTimes[i]== getQueueTs(WaitQueueS, rank) && i < rank)) {
                 unknown++;
+		printf("C- %d, other[i]- %d, ts- %d\n",rank, otherTimes[i], getQueueTs(WaitQueueS, rank));
+
             }
         }
     }
     int num = getQueueNum(WaitQueueS, rank);
+    printf("C- %d, num- %d, other- %d, ts- %d\n",rank, num, unknown, getQueueTs(WaitQueueS, rank));
     num += unknown;
     return num;
 }

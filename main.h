@@ -21,7 +21,7 @@
 #define STATE_CHANGE_PROB 50
 #define SEC_IN_STATE 1
 #define MSG_TAG 2
-#define SEC_IN_PRALKA 5  // czas potrzebny na wypranie stroju
+#define SEC_IN_PRALKA 2  // czas potrzebny na wypranie stroju
 
 #define ROOT 0
 

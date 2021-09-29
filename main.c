@@ -91,7 +91,6 @@ void naszInit(int* argc, char*** argv)
     for (int i = 0; i < Pnum; i++) {
         pralniaTimes[i] = -1;
     }
-    //!printf("\033[0; %dm", 31 + rank);
 
     if (rank < B) {
         typWatku = 'B';
