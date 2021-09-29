@@ -8,6 +8,7 @@
 pthread_t threadKom;
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lamportMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t timesMut = PTHREAD_MUTEX_INITIALIZER;
 
 // inicjacja zmiennych z main.h
 int B, C;
@@ -111,6 +112,8 @@ void naszInit(int* argc, char*** argv)
 void finalizuj()
 {
     pthread_mutex_destroy(&stateMut);
+    pthread_mutex_destroy(&lamportMut);
+    pthread_mutex_destroy(&timesMut);
     /* Czekamy, aż wątek potomny się zakończy */
     printf("[%d] - Czekam na watek komunikacyjny (konczenie).\n", rank );
     pthread_join(threadKom, NULL);
@@ -168,6 +171,20 @@ void zmienStan(state_t newState)
     stan = newState;
     pthread_mutex_unlock(&stateMut);
 }
+
+void updateTimes(int src, int ts) {
+    pthread_mutex_lock( &timesMut );
+    otherTimes[pakiet.src - B] = pakiet.ts;
+    pthread_mutex_unlock( &timesMut );
+}
+
+int readTime(int idx) {
+    pthread_mutex_lock( &timesMut );
+    int time = otherTimes[idx - B];
+    pthread_mutex_unlock( &timesMut );
+    return time;
+}
+
 
 int main(int argc, char** argv)
 {

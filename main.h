@@ -78,6 +78,8 @@ void sendPacketToAllConans(packet_t *pkt, int tag);
 void zmienStan(state_t);
 int zwiekszLamporta();
 int zmianaLamporta(int value);
+void updateTimes(int, int);
+int readTime(int);
 
 
 /* macro debug - działa jak printf, kiedy zdefiniowano

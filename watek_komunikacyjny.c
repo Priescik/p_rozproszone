@@ -17,7 +17,7 @@ void *startKomWatek(void *ptr)
 
             int currentLamport = lamportValue;
             if (pakiet.src >= B) {
-                otherTimes[pakiet.src - B] = pakiet.ts;
+                updateTimes(pakiet.src, pakiet.ts);
                 if (pakiet.ts > currentLamport) {
                     zmianaLamporta(pakiet.ts);
                 }
