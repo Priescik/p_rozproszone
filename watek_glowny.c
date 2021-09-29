@@ -30,16 +30,11 @@ void bibliLoop() {
             pkt->data = con;
             printf("Watek-[%c] id-[%d]          - wysylam zlecenie do Conana[%d]\n", typWatku, rank, con);
             sendPacket(pkt, con, MSG_TAG);
-            // printf("[%c] id-[%d] - Czekam na przyjęcie\n", watek_type, rank, con);
-            // MPI_Recv(rec, 1, MPI_PACKET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
-            // if (rec.data == 1)
-            //     zmienStan(OCZEKIWANIE_NA_WYKONANIE)
         }
         else if (stan == bCzeka) {
             // bibliotekarz czeka na zakonczenie zlecenia
             // moze przejsc do stanu Odpoczywa gdy dostanie odpowiednia wiadomosc
             printf("Watek-[%c] id-[%d]          - czekam na ukonczenie zlecenia\n", typWatku, rank);
-            //MPI_Recv(rec, 1, MPI_PACKET_T, rec.src, MSG_TAG, MPI_COMM_WORLD, &status);
         }
     }
 }
@@ -62,23 +57,29 @@ void conanLoop()
             }
         }
         else if (stan == cChceZlecenie) {
-            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o zlecenie\n", typWatku, rank, lamportValue);
 			// wyslij do wszystkich conanow prosbe o dodanie do kolejki zlecen
             // przejdz do nastepnego stanu jesli dostales ZLECENIE a twoj priorytet jest najwiekszy sposrod adresatow
+            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o zlecenie\n", typWatku, rank, lamportValue);
         }
         else if (stan == cWaitStroj) {
-            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Stroj\n", typWatku, rank, lamportValue);
-            // wyslij REQstroj do wszystkich conanow
-            // kazda przychodzaca wiadomosc REQstroj zapisywana jest w lokalnej tablicy/kolejce sQueue
-            // wejscie do nastepnego stanu jesli liczba obcych REQstroj nie przekracza liczby strojow Snum
-            if (getQueueLastOccuranceNum(WaitQueueS, rank) < Snum && answerCount == C && canGetToSlipkiSec()) {
+            // wejscie do nastepnego stanu jesli liczba obcych REQslipki nie przekracza liczby strojow Snum
+            //!if (getQueueNum(WaitQueueS, rank) < Snum && answerCount == C && canGetToSlipkiSec()) {
+            int myQueuePosition = canGetToSlipkiSec();
+            if (myQueuePosition < Snum) {
                 zmienStan(cInSecStroj);
+                setInactive(WaitQueueS, rank);  // req pozostaje w kolejce, ale jest żądaniem "nieaktywnym"
+                //!answerCount = 0;
+                //!myReqTs = 0;
+                printf("Watek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. ze Strojami\n", typWatku, rank, lamportValue);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Stroj\n", typWatku, rank, lamportValue);
             }
         }
         else if (stan == cInSecStroj) {
             // conan ubiera sie, losowa szansa na przejscie do nastepnego stanu
             int perc = random() % 100;
-            if (perc < 90) {
+            if (perc < 75) {
                 printf("Watek-[%c] id-[%d] lamp-{%d} - ubralem sie, ide pracowac\n", typWatku, rank, lamportValue);
                 zmienStan(cPraca);
             }
@@ -92,29 +93,38 @@ void conanLoop()
             if (perc < 75) {
                 // conan ukonczyl zadanie
                 // wyslij informacje o zakonczeniu do sparowanego bibliotekarza
-                pkt->src = rank;
-                pkt->typ = ZADANIE_ZAKONCZONE;
+                //!myReqTs = zwiekszLamporta();
                 pkt->data = 1;
-
+                pkt->typ = ZADANIE_ZAKONCZONE;
+                pkt->ts = zwiekszLamporta();
                 sendPacket(pkt, pairId, MSG_TAG);
                 printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie skonczone, ide do pralni\n", typWatku, rank, lamportValue);
-                answerCount = 0;
-		zmienStan(cWaitPranie);
+                pairId = -1;
+                //!answerCount = 0;
+		        zmienStan(cWaitPranie);
+                //!pkt->data = myReqTs;
                 pkt->typ = REQpralnia;
                 sendPacketToAllConans(pkt, MSG_TAG);
-
             }
             else {
                 printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie w trakcie realizacji\n", typWatku, rank, lamportValue);
             }
         }
         else if (stan == cWaitPranie) {
-            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Pralke\n", typWatku, rank, lamportValue);
-            // wyslij REQpranie do wszystkich conanow
-            // kazda przychodzaca wiadomosc REQpranie zapisywana jest w lokalnej tablicy/kolejce pQueue
-            // wejscie do nastepnego stanu jesli liczba obcych REQpranie nie przekracza liczby strojow Pnum
-            if (getQueueLastOccuranceNum(WaitQueueP, rank) < Pnum && answerCount == C && canGetToPralkiSec()) {
+            // wyslij REQpralnia do wszystkich conanow
+            // kazda przychodzaca wiadomosc REQpralnia zapisywana jest w lokalnej tablicy/kolejce pQueue
+            // wejscie do nastepnego stanu jesli liczba obcych REQpralnia nie przekracza liczby strojow Pnum
+            //!if (getQueueNum(WaitQueueP, rank) < Pnum && answerCount == C && canGetToPralkiSec()) {
+            int myQueuePosition = canGetToPralkiSec();
+            if (myQueuePosition < Pnum) {
                 zmienStan(cInSecPranie);
+                setInactive(WaitQueueP, rank);  // req pozostaje w kolejce, ale jest żądaniem "nieaktywnym"
+                //!answerCount = 0;
+                //!myReqTs = 0;
+                printf("Watek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. z Pralkami\n", typWatku, rank, lamportValue);
+            }
+            else {
+                printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Pralke\n", typWatku, rank, lamportValue);
             }
         }
         else if (stan == cInSecPranie) {
@@ -122,12 +132,13 @@ void conanLoop()
             // conan robi pranie
             // tworzenie nowego watku, ktory odczeka sleep(x) czasu, a potem wysle do conana informacje o zakonczeniu prania
             // po stworzeniu dodatkowego watku mozna przejsc do stanu odpoczynku
-
-            pkt->typ = RELEASE;
+            
+            pkt->data = 1;  // PRZENIESC TO POTEM DO WATKU POMOCNICZEGO
+            pkt->typ = RELEASE;  
+            pkt->ts = zwiekszLamporta();
             sendPacketToAllConans(pkt, MSG_TAG);
 
             zmienStan(cOdpoczywa);
-
         }
         sleep(SEC_IN_STATE);
     }

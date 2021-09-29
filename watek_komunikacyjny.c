@@ -14,24 +14,37 @@ void *startKomWatek(void *ptr)
     if (typWatku == 'C') {
         while (1) {
             MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
+            
+            int currentLamport = lamportValue;
+            if (pakiet.src >= B) {
+                otherTimes[pakiet.src - B] = pakiet.ts;
+                if (pakiet.ts > currentLamport) {
+                    zmianaLamporta(pakiet.ts);
+                }
+            }
 
             switch (pakiet.typ) {
                 case ZLECENIE:
                     if (stan == cChceZlecenie) {
                         // sprawdz kolejke
-                        ans->data = 1;  // akceptuj
+                        // jesli jestes najlepszy, wyslij potwierdzenie do bibliotekarza
+                        ans->data = 1;  
                         ans->typ = ZADANIE_PRZYJETE;
+                        currentLamport = zwiekszLamporta();
+                        pkt->ts = currentLamport;
                         pairId = pakiet.src;
                         sendPacket(ans, pakiet.src, MSG_TAG);
-                        answerCount = 0;
-			zmienStan(cWaitStroj);
-
+                        // popros innych conanow o dodanie do kolejki do sekcji krytycznej strojow
+                        //!myReqTs = currentLamport;
+                        //!answerCount = 0;
+			            zmienStan(cWaitStroj);
+                        ans->data = currentLamport;
                         ans->typ = REQslipki;
                         sendPacketToAllConans(ans, MSG_TAG);
                     }
                     else {
                         // jestem zajety czyms innym                    
-                        ans->data = 0;  // odrzuc
+                        ans->data = 0;  
                         ans->typ = ZADANIE_ODRZUCONE;
                         sendPacket(ans, pakiet.src, MSG_TAG);
                     }
@@ -46,41 +59,39 @@ void *startKomWatek(void *ptr)
                     break;
 
                 case REQslipki:
-                    //dodaj do lokalnej kolejki sQueue // .push_back(status.MPI_SOURCE);
+                    //dodaj do lokalnej kolejki sQueue
+                    //odeslij informacje, ze dowiedziales sie o Req
                     insertToQ(WaitQueueS, newNode(pakiet.src, 1, pakiet.ts));
                     ans->typ = ACKslipki;
+                    ans->ts = zwiekszLamporta();
+                    ans->data = pakiet.data;
                     sendPacket(ans, pakiet.src, MSG_TAG);
                     break;
 
                 case ACKslipki:
+                    //!sTimes[pakiet.src - B] = pakiet.ts;
                     if (stan == cWaitStroj)
                     {
-                        sTimes[pakiet.src - B] = pakiet.ts;
-			answerCount++;
-			    //zwiekszLamporta();
-                        //TODO: aktualizuje lamporta pod identyfikatorem nadawcy tej wiadomosci
-                        //sTimes[pakiet.src] = pakiet.ts;
+                        //!if (pakiet.data == myReqTs) { answerCount++; }
                     }
                     else {/*ignore*/ }
                     break;
 
                 case REQpralnia:
-                    //dodaj do lokalnej kolejki pQueue // .push_back(status.MPI_SOURCE);
-                    //ans->ts = lamportValue; <- robione w funckji sendPacket
-                    
+                    //dodaj do lokalnej kolejki pQueue
+                    //odeslij informacje, ze dowiedziales sie o Req
 		            insertToQ(WaitQueueP, newNode(pakiet.src, 1, pakiet.ts));
 		            ans->typ = ACKpralnia;
+                    ans->ts = zwiekszLamporta();
+                    ans->data = pakiet.data;
                     sendPacket(ans, pakiet.src, MSG_TAG);
                     break;
 
                 case ACKpralnia:
-                    if (stan == cWaitPranie || stan == cInSecPranie)
+                    //!pTimes[pakiet.src - B] = pakiet.ts;
+                    if (stan == cWaitPranie)
                     {
-			pTimes[pakiet.src - B] = pakiet.ts;
-			answerCount++;
-                        //zwiekszLamporta();
-                        //TODO: aktualizuje lamporta pod identyfikatorem nadawcy tej wiadomosci
-                        //pTimes[pakiet.src] = pakiet.ts;
+                        //!if (pakiet.data == myReqTs) { answerCount++; }
                     }
                     else {/*ignore*/ }
                     break;

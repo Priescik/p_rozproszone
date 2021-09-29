@@ -16,6 +16,7 @@ struct Queue {
 
 int getQueueTs(struct Queue*, int);
 int getQueueNum(struct Queue*, int);
+void setInactive(struct Queue*, int);
 int getQueueLastOccuranceNum(struct Queue*, int);
 
 void deQueue(struct Queue*);

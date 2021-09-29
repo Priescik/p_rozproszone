@@ -21,9 +21,11 @@ MPI_Datatype MPI_PAKIET_T;
 struct Queue* WaitQueueZ;
 struct Queue* WaitQueueS;
 struct Queue* WaitQueueP;
-int* sTimes;
-int* pTimes;
-int answerCount = 0;
+//!int* sTimes;
+//!int* pTimes;
+int* otherTimes;
+//!int answerCount = 0;
+//!int myReqTs = 0;
 
 void check_thread_support(int provided)
 {
@@ -77,9 +79,13 @@ void naszInit(int* argc, char*** argv)
     WaitQueueZ = createQueue();
     WaitQueueS = createQueue();
     WaitQueueP = createQueue();
-    sTimes = malloc(sizeof(int) * C);
-    pTimes = malloc(sizeof(int) * C);
-    printf("\033[0; %dm", 31 + rank);
+    //!sTimes = malloc(sizeof(int) * C);
+    //!memset(sTimes, 0, sizeof(int) * C);
+    //!pTimes = malloc(sizeof(int) * C);
+    //!memset(pTimes, 0, sizeof(int) * C);
+    otherTimes = malloc(sizeof(int) * C);
+    memset(otherTimes, 0, sizeof(int) * C);
+    //!printf("\033[0; %dm", 31 + rank);
 
     if (rank < B) {
         typWatku = 'B';
@@ -92,7 +98,6 @@ void naszInit(int* argc, char*** argv)
     pairId = -1;
     
     pthread_create(&threadKom, NULL, startKomWatek, 0);
-    //debug("jestem");
 }
 
 /* usunięcie zamków, czeka, aż zakończy się drugi wątek, zwalnia przydzielony typ MPI_PAKIET_T
@@ -115,8 +120,8 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     int freepkt=0;
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
-    pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
-    printf("Watek-[%c] id-[%d] lamp-{%d} - Lamp++, bo %d\n", typWatku, rank, lamportValue, pkt->typ);
+    // pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
+    // printf("Watek-[%c] id-[%d] lamp-{%d} - Lamp++, bo %d\n", typWatku, rank, lamportValue, pkt->typ);
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt) free(pkt);
 }
@@ -126,7 +131,7 @@ void sendPacketToAllConans(packet_t *pkt, int tag)
     int freepkt=0;
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
-    pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
+    // pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
     for (int i=B; i<B+C; i++) {
         MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
     }

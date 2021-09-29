@@ -12,6 +12,7 @@ int getQueueTs(struct Queue* q, int rank) {
 }
 
 int getQueueNum(struct Queue* q, int rank) {
+    // znajdź pozycję mojego pierwszego aktywnego Req w kolejce
 	int num = 0;
 	struct QNode* tmp = q->front;
 	while (tmp != NULL) {
@@ -22,7 +23,22 @@ int getQueueNum(struct Queue* q, int rank) {
 	return -1;
 }
 
+void setInactive(struct Queue* q, int rank) {
+    // ustaw moje Req jako nieaktywne
+    // udało mi się wejść do sekcji krytycznej, ale Req musi nadal pozostać w kolejce
+	struct QNode* tmp = q->front;
+    while (tmp != NULL) {
+        if(tmp->key == rank && tmp->active == 1) {
+            tmp->active = 0;
+            return;
+        }
+        tmp = tmp->next;
+    }
+    return;
+}
+
 int getQueueLastOccuranceNum(struct Queue* q, int rank) {
+    // znajdź pozycję mojego najstarszego aktywnego Req w kolejce
     int num = -1, i = 0;
     struct QNode* tmp = q->front;
     while (tmp != NULL) {
@@ -52,6 +68,8 @@ void deQueue(struct Queue* q)
 }
 
 int checkActive(struct Queue* q, int key) {
+    // zwróć '1' jeśli aktywny Req sprawdzanego procesu jest w kolejce wcześniej niż mój
+    // zwróć '-1' w przeciwnym wypadku
     struct QNode* tmp = q->front;
     while (tmp != NULL) {
         if (tmp->Cid == rank && tmp->active == 1) { return -1; }
@@ -78,8 +96,8 @@ struct Queue* createQueue()
     return q;
 }
 
-void delFromQueue(struct Queue* q, int element)
-{
+void delFromQueue(struct Queue* q, int element) {
+    // usuń wybrane żądanie/element z kolejki
     struct QNode* tmp = q->front;
     struct QNode* prev = NULL;
     while (tmp != NULL) {
@@ -104,11 +122,9 @@ void delFromQueue(struct Queue* q, int element)
 }
 
 void insertToQ(struct Queue* q, struct QNode* in) {
-    //printf("debug-1 %d\n", rank);
-
+    // wstaw nowe żądanie do kolejki na podstawie jego Ts i Cid
     struct QNode* tmp = q->front;
     struct QNode* prev = NULL;
-    //printf("debug0 %d\n", in->key);
 
     if (q->rear == NULL && q->front == NULL) {
         q->rear = in;
@@ -116,7 +132,6 @@ void insertToQ(struct Queue* q, struct QNode* in) {
         return;
     }
     while (tmp != NULL) {
-        //printf("debug %d\n", in->key);
         if (tmp->ts > in->ts || (tmp->ts == in->ts && tmp->Cid > in->Cid)) {
             if (prev == NULL)
             {
@@ -140,23 +155,41 @@ void insertToQ(struct Queue* q, struct QNode* in) {
     return;
 }
 
-int canGetToSlipkiSec(){
-    for(int i = B; i < C+B; i++){
+int canGetToSlipkiSec() {
+    // jeżeli istnieje proces, którego nie ma jeszcze w kolejce sQueue,
+    // ale jego ostatnia widziana etykieta czasowa była mniejsza od mojej - zwiększ licznik "unknown"
+    // na koniec zwróć moją pozycję w kolejce sQueue powiększoną o licznik "unknown"
+    int unknown = 0;
+    for (int i = B; i < C+B; i++) {
         int active  = checkActive(WaitQueueS, i);
         printf("rank- %d, i- %d, act- %d\n",rank, i, active);
-        if(i != rank && active == -1){
-            if((sTimes[i]< getQueueTs(WaitQueueS, rank)) || (sTimes[i]== getQueueTs(WaitQueueS, rank) && i< rank )) {return -1;}
+        if(i != rank && active == -1) {
+            if((otherTimes[i]< getQueueTs(WaitQueueS, rank)) || (otherTimes[i]== getQueueTs(WaitQueueS, rank) && i < rank)) {
+                unknown++;
+            }
         }
     }
+    int num = getQueueNum(WaitQueueS, rank);
+    num += unknown;
+    return num;
 }
 
-int canGetToPralkiSec(){
-    for(int i = B; i < C+B; i++){
+int canGetToPralkiSec() {
+    // jeżeli istnieje proces, którego nie ma jeszcze w kolejce pQueue,
+    // ale jego ostatnia widziana etykieta czasowa była mniejsza od mojej - zwiększ licznik "unknown"
+    // na koniec zwróć moją pozycję w kolejce pQueue powiększoną o licznik "unknown"
+    int unknown = 0;
+    for (int i = B; i < C+B; i++) {
         int active  = checkActive(WaitQueueP, i);
         printf("rank- %d, i- %d, act- %d\n",rank, i, active);
-        if(i != rank && active == -1){
-            if((pTimes[i]< getQueueTs(WaitQueueP, rank)) || (pTimes[i]== getQueueTs(WaitQueueP, rank) && i< rank )) {return -1;}
+        if(i != rank && active == -1) {
+            if((otherTimes[i] < getQueueTs(WaitQueueP, rank)) || (otherTimes[i] == getQueueTs(WaitQueueP, rank) && i < rank)) {
+                unknown++;
+            }
         }
     }
+    int num = getQueueNum(WaitQueueP, rank);
+    num += unknown;
+    return num;
 }
 

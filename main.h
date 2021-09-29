@@ -52,9 +52,11 @@ extern state_t stan;
 extern struct Queue* WaitQueueZ; 
 extern struct Queue* WaitQueueS;
 extern struct Queue* WaitQueueP;
-extern int* sTimes;
-extern int* pTimes;
-extern int answerCount;
+//!extern int* sTimes;
+//!extern int* pTimes;
+extern int* otherTimes;  // tablica znanych wartości zegarów innych procesów
+//!extern int answerCount;  // ilość potwierdzeń uzyskanych od innych procesów w odpowiedzi na Req
+//!extern int myReqTs;  // wartość zegaru Lamporta procesu zapisania podczas wysyłania żądania Req
 
 /*nTypy wiadomości */
 #define REQzlecenie 1
@@ -77,19 +79,6 @@ void zmienStan(state_t);
 int zwiekszLamporta();
 int zmianaLamporta(int value);
 
-
-// to ponizej jest juz zdefiniowane jako state_t
-// int ODPOCZYNEK = 0;
-// int CHCE_ZLECENIE = 1;
-// int CHCE_STROJ = 2;
-// int BIERZE_STROJ = 3;
-// int PRACA = 4;
-// int CHCE_PRANIE = 5;
-// int ROBI_PRANIE = 6;
-
-// int KATALOGOWANIE = 11;
-// int TWORZENIE_ZLECENIA = 12;
-// int OCZEKIWANIE_NA_WYKONANIE = 13;
 
 /* macro debug - działa jak printf, kiedy zdefiniowano
    DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta
