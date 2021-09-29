@@ -5,4 +5,7 @@
 void bibliLoop();
 void conanLoop();
 
+void zajmijPralke();
+void aktualizujPralki();
+
 #endif

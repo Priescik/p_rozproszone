@@ -24,6 +24,7 @@ struct Queue* WaitQueueP;
 //!int* sTimes;
 //!int* pTimes;
 int* otherTimes;
+int* pralniaTimes;
 //!int answerCount = 0;
 //!int myReqTs = 0;
 
@@ -85,6 +86,11 @@ void naszInit(int* argc, char*** argv)
     //!memset(pTimes, 0, sizeof(int) * C);
     otherTimes = malloc(sizeof(int) * C);
     memset(otherTimes, 0, sizeof(int) * C);
+    pralniaTimes = malloc(sizeof(int) * Pnum);
+    memset(pralniaTimes, 0, sizeof(int) * Pnum);
+    for (int i = 0; i < Pnum; i++) {
+        pralniaTimes[i] = -1;
+    }
     //!printf("\033[0; %dm", 31 + rank);
 
     if (rank < B) {
@@ -175,7 +181,7 @@ int main(int argc, char** argv)
     C = atoi( argv[2] );
     
     Snum = 1;  // definiowanie liczby strojow
-    Pnum = 1000;  // definiowanie liczby pralek
+    Pnum = 10;  // definiowanie liczby pralek
     lamportValue = 0;  // inicjacja zegaru Lamporta
 
     naszInit(&argc, &argv);  // tworzy wątek komunikacyjny, robi dodatkowe fajne rzeczy

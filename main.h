@@ -21,6 +21,7 @@
 #define STATE_CHANGE_PROB 50
 #define SEC_IN_STATE 1
 #define MSG_TAG 2
+#define SEC_IN_PRALKA 5  // czas potrzebny na wypranie stroju
 
 #define ROOT 0
 
@@ -55,6 +56,7 @@ extern struct Queue* WaitQueueP;
 //!extern int* sTimes;
 //!extern int* pTimes;
 extern int* otherTimes;  // tablica znanych wartości zegarów innych procesów
+extern int* pralniaTimes;  // tablica z czasami zakończenia prania strojów danego Conana
 //!extern int answerCount;  // ilość potwierdzeń uzyskanych od innych procesów w odpowiedzi na Req
 //!extern int myReqTs;  // wartość zegaru Lamporta procesu zapisania podczas wysyłania żądania Req
 

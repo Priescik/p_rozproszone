@@ -9,7 +9,6 @@ void *startKomWatek(void *ptr)
     MPI_Status status;
     packet_t pakiet;
     packet_t* ans = malloc(sizeof(packet_t));
-    int maxLamportSeen = 0;
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     if (typWatku == 'C') {
         while (1) {
@@ -31,7 +30,7 @@ void *startKomWatek(void *ptr)
                         ans->data = 1;  
                         ans->typ = ZADANIE_PRZYJETE;
                         currentLamport = zwiekszLamporta();
-                        pkt->ts = currentLamport;
+                        ans->ts = currentLamport;
                         pairId = pakiet.src;
                         sendPacket(ans, pakiet.src, MSG_TAG);
                         // popros innych conanow o dodanie do kolejki do sekcji krytycznej strojow

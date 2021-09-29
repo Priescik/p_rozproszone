@@ -2,6 +2,32 @@
 #include "watek_glowny.h"
 #include "queue.h"
 
+
+void zajmijPralke() {
+    for (int i=0; i<Pnum; i++) {
+        if (myPranie[i] == -1) { 
+            myPranie[i] = SEC_IN_PRALKA;
+            return;
+        }
+    }
+}
+
+void aktualizujPralki() {
+    for (int i=0; i<Pnum; i++) {
+        if (myPranie[i] > 0) { myPranie[i] -= 1; }
+        else if (myPranie[i] == 0) { 
+            packet_t *pkt = malloc(sizeof(packet_t));
+            pkt->src = rank;
+            pkt->typ = RELEASE;
+            pkt->ts = zwiekszLamporta();
+            sendPacketToAllConans(pkt, MSG_TAG);
+            free(pkt);
+            myPranie[i] = -1;
+        }
+    }
+}
+
+
 void bibliLoop() {
     // MPI_Status status;
     // packet_t rec;
@@ -45,6 +71,8 @@ void conanLoop()
     packet_t *pkt = malloc(sizeof(packet_t));
 
     while (1) {
+        aktualizujPralki();
+
         if (stan == cOdpoczywa) {
             // conan odpoczywa po zrealizowanym zadaniu, losowa szansa na przejscie do nastepnego stanu
             int perc = random() % 100;
@@ -130,13 +158,13 @@ void conanLoop()
         else if (stan == cInSecPranie) {
             printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie\n", typWatku, rank, lamportValue);
             // conan robi pranie
-            // tworzenie nowego watku, ktory odczeka sleep(x) czasu, a potem wysle do conana informacje o zakonczeniu prania
-            // po stworzeniu dodatkowego watku mozna przejsc do stanu odpoczynku
+            // po aktualizacji tablicy pralniaTimes przechodzi do stanu odpoczynku
             
-            pkt->data = 1;  // PRZENIESC TO POTEM DO WATKU POMOCNICZEGO
-            pkt->typ = RELEASE;  
-            pkt->ts = zwiekszLamporta();
-            sendPacketToAllConans(pkt, MSG_TAG);
+            // pkt->data = 1;  // PRZENIESC TO POTEM DO WATKU POMOCNICZEGO
+            // pkt->typ = RELEASE;  
+            // pkt->ts = zwiekszLamporta();
+            // sendPacketToAllConans(pkt, MSG_TAG);
+            zajmijPralke();
 
             zmienStan(cOdpoczywa);
         }
