@@ -34,14 +34,16 @@ void losujConanow() {
     icgs = 0;
 
     for (ic = 0; ic < C && icgs < CONAN_GROUP_SIZE; ++ic) {
-    int rc = C - ic;
-    int rcgs = CONAN_GROUP_SIZE - icgs;
-    if (rand() % rc < rcgs)    
-        updateChosenConans(icgs, ic+B);  /* +B bo indeksy conanow zaczynaja sie od B */
-        icgs++; 
+   	int rc = C - ic;
+    	int rcgs = CONAN_GROUP_SIZE - icgs;
+    	if (rand() % rc < rcgs) {
+            updateChosenConans(icgs, ic+B);  /* +B bo indeksy conanow zaczynaja sie od B */
+            
+            icgs++;
+   	}	
     }
 
-    assert(icgs == CONAN_GROUP_SIZE);
+    //assert(icgs == CONAN_GROUP_SIZE);
 }
 
 
@@ -79,7 +81,7 @@ void bibliLoop()
                 pkt->zid = zId;
                 pkt->bibid = rank;
                 for (int i=0; i<CONAN_GROUP_SIZE; i++) {
-                    int Cid = readChosenConan[i];
+                    int Cid = readChosenConan(i);
                     printf("Watek-[%c] id-[%d]          - wysylam zlecenia do Conana[%d]\n", typWatku, rank, Cid);
                     sendPacket(pkt, Cid, MSG_TAG);
                 }
@@ -107,6 +109,9 @@ void conanLoop()
             int perc = random() % 100;
             if (perc < STATE_CHANGE_PROB) {
                 zmienStan(cChceZlecenie);
+		pkt->ts = zwiekszLamporta();
+		pkt->typ = REQzlecenie;
+		sendPacketToAllConans(pkt, MSG_TAG);
                 printf("Watek-[%c] id-[%d] lamp-{%d} - bede ubiegal sie o zlecenie\n", typWatku, rank, lamportValue);
             }
             else {

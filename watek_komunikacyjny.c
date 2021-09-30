@@ -42,7 +42,7 @@ void *startKomWatek(void *ptr)
                             // wysyłam do wszystkich innych prośbę o potwierdzenie
                             updateZIds(pakiet.src, pakiet.zid);
                             ans->typ = CHCE_ZLECENIE;
-                            and->ts = zwiekszLamporta();
+                            ans->ts = zwiekszLamporta();
                             ans->zid = pakiet.zid;
                             ans->bibid = pakiet.src;
                             pairId = pakiet.src;
