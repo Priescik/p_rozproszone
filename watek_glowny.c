@@ -38,12 +38,9 @@ void losujConanow() {
     	int rcgs = CONAN_GROUP_SIZE - icgs;
     	if (rand() % rc < rcgs) {
             updateChosenConans(icgs, ic+B);  /* +B bo indeksy conanow zaczynaja sie od B */
-            
             icgs++;
-   	}	
+   	    }	
     }
-
-    //assert(icgs == CONAN_GROUP_SIZE);
 }
 
 
@@ -109,9 +106,9 @@ void conanLoop()
             int perc = random() % 100;
             if (perc < STATE_CHANGE_PROB) {
                 zmienStan(cChceZlecenie);
-		pkt->ts = zwiekszLamporta();
-		pkt->typ = REQzlecenie;
-		sendPacketToAllConans(pkt, MSG_TAG);
+                pkt->ts = zwiekszLamporta();
+                pkt->typ = REQzlecenie;
+                sendPacketToAllConans(pkt, MSG_TAG);
                 printf("Watek-[%c] id-[%d] lamp-{%d} - bede ubiegal sie o zlecenie\n", typWatku, rank, lamportValue);
             }
             else {
@@ -180,7 +177,7 @@ void conanLoop()
             }
         }
         else if (stan == cInSecPranie) {
-            printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie\n", typWatku, rank, lamportValue);
+            printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie i wracam odpoczyawc\n", typWatku, rank, lamportValue);
             // conan robi pranie
             // po aktualizacji tablicy pralniaTimes przechodzi do stanu odpoczynku
             zajmijPralke();
