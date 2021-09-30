@@ -17,16 +17,15 @@
 #define TRUE 1
 #define FALSE 0
 
-/* używane w wątku głównym, determinuje jak często i na jak długo zmieniają się stany */
-#define STATE_CHANGE_PROB 50
-#define SEC_IN_STATE 1
+#define STATE_CHANGE_PROB 75  // procentowa szansa na zmianę stanu przez proces
+#define SEC_IN_STATE 1  // czas przez ktory proces przebywa w jednym stanie
 #define MSG_TAG 2
 #define SEC_IN_PRALKA 2  // czas potrzebny na wypranie stroju
+#define CONAN_GROUP_SIZE 2  // liczba conanów, do których bibliotekarz wysyła to samo zlecenie
 
 #define ROOT 0
 
 /* stany procesów */
-//typedef enum { InRun, InMonitor, InSend, InFinish } state_t;
 typedef enum { bOdpoczywa, bTworzyZlecenie, bCzeka, cOdpoczywa, cChceZlecenie, cWaitStroj, cInSecStroj, cPraca, cWaitPranie, cInSecPranie } state_t;
 extern state_t stan;
 extern int rank;
@@ -34,9 +33,10 @@ extern int size;
 
 typedef struct {
     int ts;       /* timestamp (zegar lamporta) */
-    int src;      /* w przyszlosci: id nadawcy wiadomosci */
-    int typ;      /* w przyszlosci: typ nadawanej wiadomosci */
-    int data;     /* w przyszlosci: pewnie uzywane przez bibiliotekarza do przeslania listy odbiorcow wiadomosci */
+    int src;      /* id nadawcy wiadomosci */
+    int typ;      /* typ nadawanej wiadomosci */
+    int zid;      /* identyfikator zlecenia */
+    int bibid;    /* identyfikator nadawcy zlecenia */
 } packet_t;
 extern MPI_Datatype MPI_PAKIET_T;
 
@@ -46,78 +46,46 @@ extern int Snum, Pnum;  // liczba strojów i pralek
 extern int lamportValue;  // wartosc zegara Lamporta
 
 extern int pairId;  // identyfikator drugiej strony zlecenia
+extern int zId;  // identyfikator zlecenia o które się ubiegam / które przyjąłem
+extern int zMessagesCount;  // licznik wiadomosci zwiazanych ze zleceniem
 
 extern char typWatku;  // 'B' lub 'C'; określa czy wątek jest bibliotekarzem, czy Conanem
 extern state_t stan;
 
-extern struct Queue* WaitQueueZ; 
-extern struct Queue* WaitQueueS;
-extern struct Queue* WaitQueueP;
+extern struct Queue* WaitQueueZ;  // kolejka na żądania związane z przyjmowaniem zleceń
+extern struct Queue* WaitQueueS;  // kolejka na żądania dostępu do sekcji krytycznej S
+extern struct Queue* WaitQueueP;  // kolejka na żądania dostępu do sekcji krytycznej P
 extern int* otherTimes;  // tablica znanych wartości zegarów innych procesów
 extern int* pralniaTimes;  // tablica z czasami zakończenia prania strojów danego Conana
-//!extern int answerCount;  // ilość potwierdzeń uzyskanych od innych procesów w odpowiedzi na Req
-//!extern int myReqTs;  // wartość zegaru Lamporta procesu zapisania podczas wysyłania żądania Req
+extern int* chosenConans;  // tablica z indeksami conanów przypisanych do jednego zlecenia
+extern int* zIds;  // tablica z najwyższymi zaobserwowanymi id zleceń wysłanymi przez poszczególnych bibliotekarzy
 
 /*nTypy wiadomości */
 #define REQzlecenie 1
-#define ACKzlecenie 2
-#define REQslipki 3
-#define ACKslipki 4
-#define REQpralnia 5
-#define ACKpralnia 6
-#define RELEASE 7
-#define ZLECENIE 8
-#define ZADANIE_PRZYJETE 9
-#define ZADANIE_ODRZUCONE 10
-#define ZADANIE_ZAKONCZONE 11
+#define REQslipki 2
+#define REQpralnia 3
+#define ACK 4
+#define RELEASE 5
+#define ZLECENIE 10
+#define CHCE_ZLECENIE 11
+#define MOZESZ_ZLECENIE 12
+#define ZADANIE_PRZYJETE 13
+#define ZADANIE_ODRZUCONE 14
+#define ZADANIE_ZAKONCZONE 15
 
 /* Funkcje */
 /* wysyłanie pakietu, skrót: wskaźnik do pakietu (0 oznacza stwórz pusty pakiet), do kogo, z jakim typem */
 void sendPacket(packet_t* pkt, int destination, int tag);
 void sendPacketToAllConans(packet_t *pkt, int tag);
+void sendPacketToOtherConans(packet_t *pkt, int tag);
 void zmienStan(state_t);
 int zwiekszLamporta();
 int zmianaLamporta(int value);
-void updateTimes(int, int);
-int readTime(int);
+void updateTimes(int, int);  // ustaw i-tą pozycję w tablicy zegarów na wartość j
+int readTime(int);  // odczytaj wartość i-tej pozycji w tablicy zegarów 
+void updateZIds(int i, int id);  // ustaw i-tą pozycję w tablicy indeksów na 'id'
+int readZid(int i);  // odczytaj wartość i-tej pozycji w tablicy największych indeksów zleceń
+void updateChosenConans(int i, int cid);  // ustaw i-tą pozycję w tablicy conanów na 'cid'
+int readChosenConan(int i);  // odczytaj indeks i-tej pozycji w tablicy wybranych conanow
 
-
-/* macro debug - działa jak printf, kiedy zdefiniowano
-   DEBUG, kiedy DEBUG niezdefiniowane działa jak instrukcja pusta
-
-   używa się dokładnie jak printfa, tyle, że dodaje kolorków i automatycznie
-   wyświetla rank
-
-   w związku z tym, zmienna "rank" musi istnieć.
-
-   w printfie: definicja znaku specjalnego "%c[%d;%dm [%d]" escape[styl bold/normal;kolor [RANK]
-                                           FORMAT:argumenty doklejone z wywołania debug poprzez __VA_ARGS__
-                       "%c[%d;%dm"       wyczyszczenie atrybutów    27,0,37
-                                            UWAGA:
-                                                27 == kod ascii escape.
-                                                Pierwsze %c[%d;%dm ( np 27[1;10m ) definiuje styl i kolor literek
-                                                Drugie   %c[%d;%dm czyli 27[0;37m przywraca domyślne kolory i brak pogrubienia (bolda)
-                                                ...  w definicji makra oznacza, że ma zmienną liczbę parametrów
-
-*/
-/* #ifdef DEBUG
-#define debug(FORMAT,...) printf("%c[%d;%dm [%d]: " FORMAT "%c[%d;%dm\n",  27, (1+(rank/7))%2, 31+(6+rank)%7, rank, ##__VA_ARGS__, 27,0,37);
-#else
-#define debug(...) ;
-#endif */
-
-/*
-#define P_WHITE printf("%c[%d;%dm",27,1,37);
-#define P_BLACK printf("%c[%d;%dm",27,1,30);
-#define P_RED printf("%c[%d;%dm",27,1,31);
-#define P_GREEN printf("%c[%d;%dm",27,1,33);
-#define P_BLUE printf("%c[%d;%dm",27,1,34);
-#define P_MAGENTA printf("%c[%d;%dm",27,1,35);
-#define P_CYAN printf("%c[%d;%d;%dm",27,1,36);
-#define P_SET(X) printf("%c[%d;%dm",27,1,31+(6+X)%7);
-#define P_CLR printf("%c[%d;%dm",27,0,37);
-
-// printf ale z kolorkami i automatycznym wyświetlaniem RANK. Patrz debug wyżej po szczegóły, jak działa ustawianie kolorków 
-#define println(FORMAT, ...) printf("%c[%d;%dm [%d]: " FORMAT "%c[%d;%dm\n",  27, (1+(rank/7))%2, 31+(6+rank)%7, rank, ##__VA_ARGS__, 27,0,37);
-*/
 #endif

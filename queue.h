@@ -32,3 +32,4 @@ void insertToQ(struct Queue*, struct QNode*);
 
 int canGetToSlipkiSec();
 int canGetToPralkiSec();
+//int canTakeZlecenie();

@@ -195,3 +195,17 @@ int canGetToPralkiSec() {
     return num;
 }
 
+// int canTakeZlecenie() {
+//     for (int i = 0; i < CONAN_GROUP_SIZE; i++) {
+//         int Cid = readZid[i];
+//         int active  = checkActive(WaitQueueZ, Cid);
+//         if(Cid != rank && active == -1) {
+//             if((readTime(Cid) < getQueueTs(WaitQueueZ, rank)) || (readTime(Cid) == getQueueTs(WaitQueueZ, rank) && Cid < rank)) {
+//                 return 1;
+//             }
+//         }
+//     }
+//     int num = getQueueNum(WaitQueueZ, rank);
+//     return num;
+// }
+

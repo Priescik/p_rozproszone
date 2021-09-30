@@ -9,12 +9,16 @@ pthread_t threadKom;
 pthread_mutex_t stateMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t lamportMut = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t timesMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t zidMut = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t groupMut = PTHREAD_MUTEX_INITIALIZER;
 
 // inicjacja zmiennych z main.h
 int B, C;
 int Snum, Pnum;
 int lamportValue;
 int pairId;
+int zId;
+int zMessagesCount;
 char typWatku;
 state_t stan;
 int size, rank;
@@ -22,12 +26,11 @@ MPI_Datatype MPI_PAKIET_T;
 struct Queue* WaitQueueZ;
 struct Queue* WaitQueueS;
 struct Queue* WaitQueueP;
-//!int* sTimes;
-//!int* pTimes;
 int* otherTimes;
 int* pralniaTimes;
-//!int answerCount = 0;
-//!int myReqTs = 0;
+int* chosenConans;
+int* zIds;
+
 
 void check_thread_support(int provided)
 {
@@ -61,15 +64,16 @@ void naszInit(int* argc, char*** argv)
     check_thread_support(provided);
 
     /* Stworzenie typu */
-    const int nitems = 4; /* bo packet_t ma cztery* pola */
-    int       blocklengths[4] = { 1,1,1,1 };
-    MPI_Datatype typy[4] = { MPI_INT, MPI_INT, MPI_INT, MPI_INT };
+    const int nitems = 5; /* bo packet_t ma pięć* pól */
+    int       blocklengths[5] = { 1,1,1,1,1 };
+    MPI_Datatype typy[5] = { MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT };
 
-    MPI_Aint     offsets[4];
+    MPI_Aint     offsets[5];
     offsets[0] = offsetof(packet_t, ts);
     offsets[1] = offsetof(packet_t, src);
     offsets[2] = offsetof(packet_t, typ);
-    offsets[3] = offsetof(packet_t, data);
+    offsets[3] = offsetof(packet_t, zid);
+    offsets[4] = offsetof(packet_t, bibid);
 
     MPI_Type_create_struct(nitems, blocklengths, offsets, typy, &MPI_PAKIET_T);
     MPI_Type_commit(&MPI_PAKIET_T);
@@ -81,10 +85,7 @@ void naszInit(int* argc, char*** argv)
     WaitQueueZ = createQueue();
     WaitQueueS = createQueue();
     WaitQueueP = createQueue();
-    //!sTimes = malloc(sizeof(int) * C);
-    //!memset(sTimes, 0, sizeof(int) * C);
-    //!pTimes = malloc(sizeof(int) * C);
-    //!memset(pTimes, 0, sizeof(int) * C);
+
     otherTimes = malloc(sizeof(int) * C);
     memset(otherTimes, 0, sizeof(int) * C);
     pralniaTimes = malloc(sizeof(int) * Pnum);
@@ -92,6 +93,10 @@ void naszInit(int* argc, char*** argv)
     for (int i = 0; i < Pnum; i++) {
         pralniaTimes[i] = -1;
     }
+    zIds = malloc(sizeof(int) * B);
+    memset(zIds, 0, sizeof(int) * B);
+    chosenConans = malloc(sizeof(int) * CONAN_GROUP_SIZE);
+    memset(chosenConans, 0, sizeof(int) * CONAN_GROUP_SIZE);
 
     if (rank < B) {
         typWatku = 'B';
@@ -102,6 +107,8 @@ void naszInit(int* argc, char*** argv)
         stan = cOdpoczywa;
     }
     pairId = -1;
+    zId = -1;
+    zMessagesCount = 0;
     
     pthread_create(&threadKom, NULL, startKomWatek, 0);
 }
@@ -114,6 +121,9 @@ void finalizuj()
     pthread_mutex_destroy(&stateMut);
     pthread_mutex_destroy(&lamportMut);
     pthread_mutex_destroy(&timesMut);
+    pthread_mutex_destroy(&zidMut);
+    pthread_mutex_destroy(&groupMut);
+    
     /* Czekamy, aż wątek potomny się zakończy */
     printf("[%d] - Czekam na watek komunikacyjny (konczenie).\n", rank );
     pthread_join(threadKom, NULL);
@@ -128,8 +138,6 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     int freepkt=0;
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
-    // pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
-    // printf("Watek-[%c] id-[%d] lamp-{%d} - Lamp++, bo %d\n", typWatku, rank, lamportValue, pkt->typ);
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
     if (freepkt) free(pkt);
 }
@@ -139,9 +147,21 @@ void sendPacketToAllConans(packet_t *pkt, int tag)
     int freepkt=0;
     if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
     pkt->src = rank;
-    // pkt->ts = zwiekszLamporta();  // może trzeba będzie to wyciągnąć z tej funkcji
     for (int i=B; i<B+C; i++) {
         MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
+    }
+    if (freepkt) free(pkt);
+}
+
+void sendPacketToOtherConans(packet_t *pkt, int tag)
+{
+    int freepkt=0;
+    if (pkt==0) { pkt = malloc(sizeof(packet_t)); freepkt=1;}
+    pkt->src = rank;
+    for (int i=B; i<B+C; i++) {
+        if (i != rank) {
+            MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
+        }
     }
     if (freepkt) free(pkt);
 }
@@ -154,7 +174,6 @@ int zwiekszLamporta()
     pthread_mutex_unlock( &lamportMut );
     return tmp;
 }
-
 
 int zmianaLamporta(int value)
 {
@@ -174,7 +193,7 @@ void zmienStan(state_t newState)
 
 void updateTimes(int src, int ts) {
     pthread_mutex_lock( &timesMut );
-    otherTimes[pakiet.src - B] = pakiet.ts;
+    otherTimes[src - B] = ts;
     pthread_mutex_unlock( &timesMut );
 }
 
@@ -183,6 +202,40 @@ int readTime(int idx) {
     int time = otherTimes[idx - B];
     pthread_mutex_unlock( &timesMut );
     return time;
+}
+
+void updateZIds(int i, int id) {
+    if (i >= B) {
+        printf("Blad podczas aktualizowania Zids - niepoprawny indeks!\n");
+        return; 
+    }
+    pthread_mutex_lock( &zidMut );
+    zIds[i] = id;
+    pthread_mutex_unlock( &zidMut );
+}
+
+int readZid(int i) {
+    pthread_mutex_lock( &zidMut );
+    int zid = zIds[i];
+    pthread_mutex_unlock( &zidMut );
+    return zid;
+}
+
+void updateChosenConans(int i, int cid) {
+    if (i >= CONAN_GROUP_SIZE) {
+        printf("Blad podczas aktualizowania Cid - niepoprawny indeks!\n");
+        return; 
+    }
+    pthread_mutex_lock( &groupMut );
+    chosenConans[i] = cid;
+    pthread_mutex_unlock( &groupMut );
+}
+
+int readChosenConan(int i) {
+    pthread_mutex_lock( &groupMut );
+    int Cid = chosenConans[i];
+    pthread_mutex_unlock( &groupMut );
+    return Cid;
 }
 
 
