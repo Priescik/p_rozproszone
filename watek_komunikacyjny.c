@@ -27,7 +27,7 @@ void *startKomWatek(void *ptr)
 
             switch (pakiet.typ) {
                 case ZLECENIE:
-                    if (stan == cChceZlecenie && zId != -1) {
+                    if (stan == cChceZlecenie && zId == -1) {
                         int highestZid = readZid(pakiet.src);
                         if (pakiet.zid <= highestZid) {
                             // widziałem już zlecenie o takim id
