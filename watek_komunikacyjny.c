@@ -13,7 +13,8 @@ void *startKomWatek(void *ptr)
     if (typWatku == 'C') {
         while (1) {
             MPI_Recv(&pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MSG_TAG, MPI_COMM_WORLD, &status);
-            printf("TYP -[%c] id-[%d] lamp-{%d} - Odebralem wiadomosc od {%d}, czas %d, typ %d.\n", typWatku, rank, lamportValue, pakiet.src, pakiet.ts, pakiet.typ);
+            if (C <= 5)
+	    	printf("\033[0;37mTYP -[%c] id-[%d] lamp-{%d} - Odebralem wiadomosc od {%d}, czas %d, typ %d.\n", typWatku, rank, lamportValue, pakiet.src, pakiet.ts, pakiet.typ);
 
             int currentLamport = lamportValue;
             if (pakiet.src >= B) {

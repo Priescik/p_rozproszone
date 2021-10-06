@@ -241,16 +241,16 @@ int readChosenConan(int i) {
 
 int main(int argc, char** argv)
 {
-    if (argc != 3) {
+    if (argc != 5) {
         printf("Uruchomienie zakonczone niepowodzeniem - niepoprawna ilosc parametrow\n");
         return 0;
     }
 
-    B = atoi( argv[1] );
-    C = atoi( argv[2] );
+    B = atoi(argv[1]);
+    C = atoi(argv[2]);
     
-    Snum = 1;  // definiowanie liczby strojow
-    Pnum = 10;  // definiowanie liczby pralek
+    Snum = atoi(argv[3]);  // definiowanie liczby strojow
+    Pnum = atoi(argv[4]);  // definiowanie liczby pralek
     lamportValue = 0;  // inicjacja zegaru Lamporta
 
     naszInit(&argc, &argv);  // tworzy wątek komunikacyjny, robi dodatkowe fajne rzeczy

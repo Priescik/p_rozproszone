@@ -21,7 +21,7 @@ void aktualizujPralki() {
             pkt->src = rank;
             pkt->typ = RELEASE;
             pkt->ts = zwiekszLamporta();
-	        printf("Watek-[%c] id-[%d] lamp-{%d} - Pranie skonczone, wysylam RELEASE\n", typWatku, rank, lamportValue);
+	        printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - Pranie skonczone, wysylam RELEASE\n", (rank%7 + 31), typWatku, rank, lamportValue);
             sendPacketToAllConans(pkt, MSG_TAG);
             free(pkt);
             pralniaTimes[i] = -1;
@@ -58,12 +58,12 @@ void bibliLoop()
             // bibliotekarz odpoczywa, losowa szansa na przejscie do kolejnego stanu
             int perc = random() % 100;
             if (perc < STATE_CHANGE_PROB) {
-                printf("Watek-[%c] id-[%d]          - bede tworzyl zlecenie\n", typWatku, rank);
+                printf("\033[0;%dmWatek-[%c] id-[%d]          - bede tworzyl zlecenie\n", (rank%7 + 31), typWatku, rank);
                 notSent == 1;
                 zmienStan(bTworzyZlecenie);
             }
             else {
-                printf("Watek-[%c] id-[%d]          - pozostaje w stanie odpoczynku\n", typWatku, rank);
+                printf("\033[0;%dmWatek-[%c] id-[%d]          - pozostaje w stanie odpoczynku\n", (rank%7 + 31), typWatku, rank);
             }
         }
         else if (stan == bTworzyZlecenie) {
@@ -79,7 +79,7 @@ void bibliLoop()
                 pkt->bibid = rank;
                 for (int i=0; i<CONAN_GROUP_SIZE; i++) {
                     int Cid = readChosenConan(i);
-                    printf("Watek-[%c] id-[%d]          - wysylam zlecenia do Conana[%d]\n", typWatku, rank, Cid);
+                    printf("\033[0;%dmWatek-[%c] id-[%d]          - wysylam zlecenia do Conana[%d]\n", (rank%7 + 31), typWatku, rank, Cid);
                     sendPacket(pkt, Cid, MSG_TAG);
                 }
                 notSent == 0;
@@ -88,7 +88,7 @@ void bibliLoop()
         else if (stan == bCzeka) {
             // bibliotekarz czeka na zakonczenie zlecenia
             // moze przejsc do stanu Odpoczywa gdy dostanie odpowiednia wiadomosc w watku kom.
-            printf("Watek-[%c] id-[%d]          - czekam na ukonczenie zlecenia\n", typWatku, rank);
+            printf("\033[0;%dmWatek-[%c] id-[%d]          - czekam na ukonczenie zlecenia\n", (rank%7 + 31), typWatku, rank);
         }
     }
 }
@@ -109,16 +109,16 @@ void conanLoop()
                 pkt->ts = zwiekszLamporta();
                 pkt->typ = REQzlecenie;
                 sendPacketToAllConans(pkt, MSG_TAG);
-                printf("Watek-[%c] id-[%d] lamp-{%d} - bede ubiegal sie o zlecenie\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - bede ubiegal sie o zlecenie\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
             else {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - pozostaje w stanie odpoczynku\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - pozostaje w stanie odpoczynku\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
         }
         else if (stan == cChceZlecenie) {
 			// wyslij do wszystkich conanow prosbe o dodanie do kolejki zlecen
             // przejdz do nastepnego stanu jesli dostales ZLECENIE oraz ACK od pozostałych conanów
-            printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o zlecenie\n", typWatku, rank, lamportValue);
+            printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - ubiegam sie o zlecenie\n", (rank%7 + 31), typWatku, rank, lamportValue);
         }
         else if (stan == cWaitStroj) {
             // wejscie do nastepnego stanu jesli liczba obcych REQslipki nie przekracza liczby strojow Snum
@@ -126,21 +126,21 @@ void conanLoop()
             if (myQueuePosition < Snum) {
                 zmienStan(cInSecStroj);
                 setInactive(WaitQueueS, rank);  // req pozostaje w kolejce, ale jest żądaniem "nieaktywnym"
-                printf("Watek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. ze Strojami\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. ze Strojami\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
             else {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Stroj\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Stroj\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
         }
         else if (stan == cInSecStroj) {
             // conan ubiera sie, losowa szansa na przejscie do nastepnego stanu
             int perc = random() % 100;
             if (perc < STATE_CHANGE_PROB) {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - ubralem sie, ide pracowac\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - ubralem sie, ide pracowac\n", (rank%7 + 31), typWatku, rank, lamportValue);
                 zmienStan(cPraca);
             }
             else {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - w sekcji kryt., ubieram sie\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - w sekcji kryt., ubieram sie\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
         }
         else if (stan == cPraca) {
@@ -152,7 +152,7 @@ void conanLoop()
                 pkt->typ = ZADANIE_ZAKONCZONE;
                 pkt->ts = zwiekszLamporta();
                 sendPacket(pkt, pairId, MSG_TAG);
-                printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie skonczone, ide do pralni\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - zlecenie skonczone, ide do pralni\n", (rank%7 + 31), typWatku, rank, lamportValue);
                 pairId = -1;
                 zId = -1;
 		        // popros innych conanow o dodanie do kolejki do sekcji krytycznej pralni
@@ -161,7 +161,7 @@ void conanLoop()
                 sendPacketToAllConans(pkt, MSG_TAG);
             }
             else {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - zlecenie w trakcie realizacji\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - zlecenie w trakcie realizacji\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
         }
         else if (stan == cWaitPranie) {
@@ -170,14 +170,14 @@ void conanLoop()
             if (myQueuePosition < Pnum) {
                 zmienStan(cInSecPranie);
                 setInactive(WaitQueueP, rank);  // req pozostaje w kolejce, ale jest żądaniem "nieaktywnym"
-                printf("Watek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. z Pralkami\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - wchodze do sekcji kryt. z Pralkami\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
             else {
-                printf("Watek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Pralke\n", typWatku, rank, lamportValue);
+                printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - ubiegam sie o Pralke\n", (rank%7 + 31), typWatku, rank, lamportValue);
             }
         }
         else if (stan == cInSecPranie) {
-            printf("Watek-[%c] id-[%d] lamp-{%d} - robie pranie i wracam odpoczyawc\n", typWatku, rank, lamportValue);
+            printf("\033[0;%dmWatek-[%c] id-[%d] lamp-{%d} - robie pranie i wracam odpoczyawc\n", (rank%7 + 31), typWatku, rank, lamportValue);
             // conan robi pranie
             // po aktualizacji tablicy pralniaTimes przechodzi do stanu odpoczynku
             zajmijPralke();

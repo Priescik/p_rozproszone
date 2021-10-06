@@ -20,8 +20,8 @@
 #define STATE_CHANGE_PROB 75  // procentowa szansa na zmianę stanu przez proces
 #define SEC_IN_STATE 1  // czas przez ktory proces przebywa w jednym stanie
 #define MSG_TAG 2
-#define SEC_IN_PRALKA 2  // czas potrzebny na wypranie stroju
-#define CONAN_GROUP_SIZE 2  // liczba conanów, do których bibliotekarz wysyła to samo zlecenie
+#define SEC_IN_PRALKA 5  // czas potrzebny na wypranie stroju
+#define CONAN_GROUP_SIZE 3  // liczba conanów, do których bibliotekarz wysyła to samo zlecenie
 
 #define ROOT 0
 
